@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Schätzquiz Mehrere Runden</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; font-size: 1rem; }
+    .results { margin-top: 20px; }
+    .entry { padding: 5px 0; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Schätzquiz – Runde <span id="round-number">1</span></h1>
+  <p id="question">Frage wird geladen...</p>
+
+  <input id="name" placeholder="Dein Name" />
+  <input id="answer" type="number" placeholder="Deine Schätzung" />
+  <button onclick="submitAnswer()">Absenden</button>
+
+  <button class="hidden" id="show-winner" onclick="showResults()">Ergebnis anzeigen</button>
+  <div class="results" id="results"></div>
+  <button class="hidden" id="next-round" onclick="nextRound()">Nächste Runde starten</button>
+
+  <script>
+    const questions = [
+      { q: "Wie viele Bücher gibt es in den beiden Bibliotheken der Schule?", a: 27433 },
+      { q: "Wie viele Besucher*innen hatte die Bibliothek in den Pausen in diesem Schuljahr?", a: 10823 },
+      { q: "Wie viele E-Mails hat das Sekretariat der Grundschule in diesem Schuljahr erhalten?", a: 3776 },
+      { q: "Wie viele Nachrichten wurden in diesem Schuljahr in der WhatsApp-Gruppe gesendet?", a: 2855 },
+      { q: "Wie viele Blatt Papier haben wir in diesem Schuljahr verbraucht?", a: 240000 }
+    ];
+
+    let currentRound = 0;
+    const entries = new Map();
+
+    function loadQuestion() {
+      document.getElementById('round-number').textContent = currentRound + 1;
+      document.getElementById('question').textContent = questions[currentRound].q;
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('name').value = '';
+      document.getElementById('answer').value = '';
+      entries.clear();
+      document.getElementById('next-round').classList.add('hidden');
+      document.getElementById('show-winner').classList.add('hidden');
+    }
+
+    function submitAnswer() {
+      const name = document.getElementById('name').value.trim();
+      const answer = parseFloat(document.getElementById('answer').value);
+
+      if (!name || isNaN(answer)) {
+        alert('Bitte alle Felder ausfüllen.');
+        return;
+      }
+      if (entries.has(name)) {
+        alert('Du hast in dieser Runde bereits teilgenommen.');
+        return;
+      }
+
+      const correct = questions[currentRound].a;
+      const diff = Math.abs(answer - correct);
+
+      entries.set(name, { name, answer, diff });
+
+      document.getElementById('name').value = '';
+      document.getElementById('answer').value = '';
+
+      document.getElementById('show-winner').classList.remove('hidden');
+    }
+
+    function showResults() {
+      const results = document.getElementById('results');
+      results.innerHTML = '<h2>Rundensieger:</h2>';
+
+      const sorted = Array.from(entries.values()).sort((a, b) => a.diff - b.diff);
+      if (sorted.length > 0) {
+        const winner = sorted[0];
+        results.innerHTML += `
+          <div class="entry">
+            🏆 <strong>${winner.name}</strong> mit nur ${winner.diff.toFixed(1)} Abweichung.<br>
+            Antwort: ${winner.answer}
+          </div>`;
+      }
+      document.getElementById('next-round').classList.remove('hidden');
+      document.getElementById('show-winner').classList.add('hidden');
+    }
+
+    function nextRound() {
+      currentRound++;
+      if (currentRound >= questions.length) {
+        document.getElementById('question').textContent = 'Quiz beendet!';
+        document.getElementById('name').classList.add('hidden');
+        document.getElementById('answer').classList.add('hidden');
+        document.querySelector('button[onclick="submitAnswer()"]').classList.add('hidden');
+        document.getElementById('next-round').classList.add('hidden');
+        return;
+      }
+      loadQuestion();
+    }
+
+    window.onload = loadQuestion;
+  </script>
+</body>
+</html>
